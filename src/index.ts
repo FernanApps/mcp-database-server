@@ -16,6 +16,15 @@ import { initDatabase, closeDatabase, getDatabaseMetadata } from './db/index.js'
 import { handleListResources, handleReadResource } from './handlers/resourceHandlers.js';
 import { handleListTools, handleToolCall } from './handlers/toolHandlers.js';
 
+// Version
+const VERSION = "2.0.1";
+
+// Handle --version flag
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+  console.log(`mcp-database-server v${VERSION}`);
+  process.exit(0);
+}
+
 // Setup a logger that uses stderr instead of stdout to avoid interfering with MCP communications
 const logger = {
   log: (...args: any[]) => console.error('[INFO]', ...args),
@@ -28,7 +37,7 @@ const logger = {
 const server = new Server(
   {
     name: "executeautomation/database-server",
-    version: "1.1.0",
+    version: VERSION,
   },
   {
     capabilities: {
