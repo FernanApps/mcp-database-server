@@ -2,6 +2,7 @@ import { DbAdapter, createDbAdapter } from './adapter.js';
 
 // Store the active database adapter
 let dbAdapter: DbAdapter | null = null;
+let currentDbType: string = 'sqlite';
 
 /**
  * Initialize the database connection
@@ -15,9 +16,12 @@ export async function initDatabase(connectionInfo: any, dbType: string = 'sqlite
       connectionInfo = { path: connectionInfo };
     }
 
+    // Store the database type
+    currentDbType = dbType.toLowerCase();
+
     // Create appropriate adapter based on database type
     dbAdapter = createDbAdapter(dbType, connectionInfo);
-    
+
     // Initialize the connection
     await dbAdapter.init();
   } catch (error) {
@@ -102,4 +106,30 @@ export function getDescribeTableQuery(tableName: string): string {
     throw new Error("Database not initialized");
   }
   return dbAdapter.getDescribeTableQuery(tableName);
+}
+
+/**
+ * Get the current database type
+ * @returns Database type string ('sqlite', 'sqlserver', 'postgresql', 'mysql')
+ */
+export function getDatabaseType(): string {
+  return currentDbType;
+}
+
+/**
+ * Get the database adapter instance
+ * @returns The active database adapter
+ */
+export function getDbAdapter(): DbAdapter {
+  if (!dbAdapter) {
+    throw new Error("Database not initialized");
+  }
+  return dbAdapter;
+}
+
+/**
+ * Check if the current database is SQL Server
+ */
+export function isSqlServer(): boolean {
+  return currentDbType === 'sqlserver';
 } 

@@ -1,0 +1,21 @@
+{
+  "backup": {
+    "enabled": true,
+    "directory": ".sql_backups",
+    "max_backups_per_object": 50,
+    "auto_cleanup": true,
+    "cleanup_days": 30
+  },
+  "security": {
+    "require_confirm_for_alter": true,
+    "require_confirm_for_drop": true,
+    "require_confirm_for_exec_with_writes": true,
+    "blocked_procedures": ["sp_executesql", "xp_cmdshell", "xp_regread", "xp_regwrite"]
+  },
+  "limits": {
+    "default_timeout_seconds": 30,
+    "max_timeout_seconds": 120,
+    "default_max_rows": 1000,
+    "max_rows": 10000
+  }
+}

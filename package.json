@@ -1,7 +1,7 @@
 {
     "name": "@executeautomation/database-server",
-    "version": "1.1.0",
-    "description": "MCP server for interacting with SQLite and SQL Server databases by ExecuteAutomation",
+    "version": "2.0.0",
+    "description": "MCP server for interacting with SQLite, SQL Server, PostgreSQL, and MySQL databases with advanced SQL Server features including backup, restore, and object management",
     "license": "MIT",
     "author": "ExecuteAutomation, Ltd (https://executeautomation.com)",
     "homepage": "https://github.com/executeautomation/mcp-database-server",
