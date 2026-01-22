@@ -182,6 +182,9 @@ export async function restoreFromBackup(
         .replace(/\bCREATE\s+(TRIGGER)/gi, 'ALTER $1');
     }
 
+    // Remove GO statements (SSMS batch separator, not valid T-SQL)
+    restoreDefinition = restoreDefinition.replace(/^\s*GO\s*$/gim, '');
+
     // Execute the restore
     await dbExec(restoreDefinition);
 

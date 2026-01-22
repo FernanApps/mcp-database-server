@@ -207,7 +207,7 @@ export async function generateCreateTableScript(tableName: string, schemaName: s
   }
 
   script += columnDefs.join(',\n');
-  script += '\n);\nGO\n';
+  script += '\n);\n';
 
   // Add indexes
   for (const idx of indexResult) {
@@ -217,7 +217,7 @@ export async function generateCreateTableScript(tableName: string, schemaName: s
       if (idx.included_columns) {
         script += ` INCLUDE (${idx.included_columns})`;
       }
-      script += ';\nGO\n';
+      script += ';\n';
     }
   }
 
