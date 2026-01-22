@@ -1,6 +1,6 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/executeautomation-mcp-database-server-badge.png)](https://mseep.ai/app/executeautomation-mcp-database-server)
-
 # MCP Database Server
+
+> Fork of [executeautomation/mcp-database-server](https://github.com/executeautomation/mcp-database-server) with extended SQL Server features including automatic backups, object management, and more.
 
 This MCP (Model Context Protocol) server provides database access capabilities to Claude, supporting SQLite, SQL Server, PostgreSQL, and MySQL databases.
 
@@ -8,7 +8,7 @@ This MCP (Model Context Protocol) server provides database access capabilities t
 
 1. Clone the repository:
 ```
-git clone https://github.com/executeautomation/mcp-database-server.git
+git clone https://github.com/FernanApps/mcp-database-server.git
 cd mcp-database-server
 ```
 
@@ -21,30 +21,6 @@ npm install
 ```
 npm run build
 ```
-
-## Usage Options
-
-There are two ways to use this MCP server with Claude:
-
-1. **Direct usage**: Install the package globally and use it directly
-2. **Local development**: Run from your local development environment
-
-### Direct Usage with NPM Package
-
-The easiest way to use this MCP server is by installing it globally:
-
-```bash
-npm install -g @executeautomation/database-server
-```
-
-This allows you to use the server directly without building it locally.
-
-### Local Development Setup
-
-If you want to modify the code or run from your local environment:
-
-1. Clone and build the repository as shown in the Installation section
-2. Run the server using the commands in the Usage section below
 
 ## Usage
 
@@ -140,73 +116,56 @@ Note: SSL is automatically enabled for AWS IAM authentication
 
 ## Configuring Claude Desktop
 
-### Direct Usage Configuration
+### Using from GitHub (Recommended for Forks)
 
-If you installed the package globally, configure Claude Desktop with:
+You can use this MCP server directly from GitHub without installing it:
 
+**For Claude Desktop (macOS/Linux):**
 ```json
 {
   "mcpServers": {
-    "sqlite": {
+    "database": {
       "command": "npx",
       "args": [
         "-y",
-        "@executeautomation/database-server",
-        "/path/to/your/database.db"
-      ]
-    },
-    "sqlserver": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/database-server",
+        "github:FernanApps/mcp-database-server#main",
         "--sqlserver",
-        "--server", "your-server-name",
-        "--database", "your-database-name",
-        "--user", "your-username",
+        "--server", "localhost",
+        "--database", "your-database",
+        "--user", "sa",
         "--password", "your-password"
-      ]
-    },
-    "postgresql": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/database-server",
-        "--postgresql",
-        "--host", "your-host-name",
-        "--database", "your-database-name",
-        "--user", "your-username",
-        "--password", "your-password"
-      ]
-    },
-    "mysql": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/database-server",
-        "--mysql",
-        "--host", "your-host-name",
-        "--database", "your-database-name",
-        "--port", "3306",
-        "--user", "your-username",
-        "--password", "your-password"
-      ]
-    },
-    "mysql-aws": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/database-server",
-        "--mysql",
-        "--aws-iam-auth",
-        "--host", "your-rds-endpoint.region.rds.amazonaws.com",
-        "--database", "your-database-name",
-        "--user", "your-aws-username",
-        "--aws-region", "us-east-1"
       ]
     }
   }
 }
+```
+
+**For Claude Code on Windows (.mcp.json):**
+```json
+{
+  "mcpServers": {
+    "database": {
+      "command": "cmd",
+      "args": [
+        "/c", "npx",
+        "-y",
+        "github:FernanApps/mcp-database-server#main",
+        "--sqlserver",
+        "--server", "localhost",
+        "--database", "your-database",
+        "--user", "sa",
+        "--password", "your-password"
+      ]
+    }
+  }
+}
+```
+
+> **Note:** The `#main` ensures you always get the latest version from the main branch. You can also use a specific commit hash like `#a3f948c` for version pinning.
+
+To check the installed version:
+```bash
+npx -y github:FernanApps/mcp-database-server#main --version
 ```
 
 ### Local Development Configuration
@@ -282,18 +241,48 @@ The Claude Desktop configuration file is typically located at:
 
 The MCP Database Server provides the following tools that Claude can use:
 
+### General Tools (All Databases)
+
 | Tool | Description | Required Parameters |
 |------|-------------|---------------------|
 | `read_query` | Execute SELECT queries to read data | `query`: SQL SELECT statement |
 | `write_query` | Execute INSERT, UPDATE, or DELETE queries | `query`: SQL modification statement |
 | `create_table` | Create new tables in the database | `query`: CREATE TABLE statement |
-| `alter_table` | Modify existing table schema | `query`: ALTER TABLE statement |
-| `drop_table` | Remove a table from the database | `table_name`: Name of table<br>`confirm`: Safety flag (must be true) |
+| `alter_table` | Modify existing table schema (creates backup on SQL Server) | `query`: ALTER TABLE statement |
+| `drop_table` | Remove a table from the database (creates backup on SQL Server) | `table_name`: Name of table<br>`confirm`: Safety flag (must be true) |
 | `list_tables` | Get a list of all tables | None |
 | `describe_table` | View schema information for a table | `table_name`: Name of table |
 | `export_query` | Export query results as CSV/JSON | `query`: SQL SELECT statement<br>`format`: "csv" or "json" |
 | `append_insight` | Add a business insight to memo | `insight`: Text of insight |
 | `list_insights` | List all business insights | None |
+
+### SQL Server Exclusive Tools
+
+| Tool | Description | Required Parameters |
+|------|-------------|---------------------|
+| `get_object_definition` | Get source code of SP, function, view, or trigger | `object_name`: Name of object |
+| `list_objects` | List database objects by type | `object_type`: PROCEDURE, FUNCTION, VIEW, TRIGGER |
+| `search_in_objects` | Search text within object definitions | `search_text`: Text to search |
+| `get_dependencies` | Get object dependencies | `object_name`: Name of object |
+| `get_table_info` | Get detailed table information with indexes and FKs | `table_name`: Name of table |
+| `get_table_structure` | Generate CREATE TABLE script | `table_name`: Name of table |
+| `validate_sql` | Validate SQL syntax without executing | `query`: SQL to validate |
+| `get_procedure_info` | Get stored procedure info with parameters | `procedure_name`: Name of SP |
+| `exec_procedure` | Execute a stored procedure | `procedure_name`: Name of SP |
+| `alter_procedure` | Modify SP with automatic backup | `procedure_name`, `new_definition`, `confirm` |
+| `alter_function` | Modify function with automatic backup | `function_name`, `new_definition`, `confirm` |
+| `alter_view` | Modify view with automatic backup | `view_name`, `new_definition`, `confirm` |
+| `create_procedure` | Create new stored procedure | `procedure_name`, `definition`, `confirm` |
+| `create_function` | Create new function | `function_name`, `definition`, `confirm` |
+| `create_view` | Create new view | `view_name`, `definition`, `confirm` |
+| `drop_object` | Drop SP, function, view, or trigger with backup | `object_name`, `object_type`, `confirm` |
+| `truncate_table` | Remove all rows with structure backup | `table_name`, `confirm` |
+| `list_backups` | List all backups | `object_name` (optional) |
+| `get_backup` | Get backup content | `backup_id` |
+| `restore_from_backup` | Restore object from backup | `backup_id`, `confirm` |
+| `diff_backups` | Compare two backup versions | `backup_id_old`, `backup_id_new` |
+| `get_backup_statistics` | Get backup statistics | None |
+| `cleanup_backups` | Remove old backups | `days` (optional) |
 
 For practical examples of how to use these tools with Claude, see [Usage Examples](docs/usage-examples.md).
 

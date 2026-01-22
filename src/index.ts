@@ -17,7 +17,7 @@ import { handleListResources, handleReadResource } from './handlers/resourceHand
 import { handleListTools, handleToolCall } from './handlers/toolHandlers.js';
 
 // Version
-const VERSION = "2.0.1";
+const VERSION = "2.0.2";
 
 // Handle --version flag
 if (process.argv.includes('--version') || process.argv.includes('-v')) {

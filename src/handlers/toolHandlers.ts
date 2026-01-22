@@ -27,6 +27,7 @@ import {
   getBackupStatistics,
   cleanupBackups,
 } from '../tools/backupTools.js';
+import { getTableStructure, truncateTable } from '../tools/tableTools.js';
 
 /**
  * Handle listing available tools
@@ -84,12 +85,38 @@ export function handleListTools() {
       },
       {
         name: "drop_table",
-        description: "Remove a table from the database with safety confirmation",
+        description: "Remove a table from the database with safety confirmation. Creates structure backup for SQL Server.",
         inputSchema: {
           type: "object",
           properties: {
             table_name: { type: "string", description: "Name of the table to drop" },
             confirm: { type: "boolean", description: "Set to true to confirm the operation" },
+            schema_name: { type: "string", description: "Schema name (SQL Server only, defaults to 'dbo')" },
+          },
+          required: ["table_name", "confirm"],
+        },
+      },
+      {
+        name: "get_table_structure",
+        description: "[SQL Server] Get the complete CREATE TABLE script for a table including columns, constraints, and indexes",
+        inputSchema: {
+          type: "object",
+          properties: {
+            table_name: { type: "string", description: "Name of the table" },
+            schema_name: { type: "string", description: "Schema name (defaults to 'dbo')" },
+          },
+          required: ["table_name"],
+        },
+      },
+      {
+        name: "truncate_table",
+        description: "[SQL Server] Remove all rows from a table. Creates structure backup before truncating.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            table_name: { type: "string", description: "Name of the table to truncate" },
+            schema_name: { type: "string", description: "Schema name (defaults to 'dbo')" },
+            confirm: { type: "boolean", description: "Set to true to confirm the operation (required - this deletes all data!)" },
           },
           required: ["table_name", "confirm"],
         },
@@ -483,7 +510,13 @@ export async function handleToolCall(name: string, args: any) {
         return await alterTable(args.query);
 
       case "drop_table":
-        return await dropTable(args.table_name, args.confirm);
+        return await dropTable(args.table_name, args.confirm, args.schema_name || 'dbo');
+
+      case "get_table_structure":
+        return await getTableStructure(args.table_name, args.schema_name || 'dbo');
+
+      case "truncate_table":
+        return await truncateTable(args.table_name, args.schema_name || 'dbo', args.confirm);
 
       case "export_query":
         return await exportQuery(args.query, args.format);

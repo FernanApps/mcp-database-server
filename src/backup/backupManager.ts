@@ -39,6 +39,8 @@ function getObjectTypeDir(objectType: string): string {
     'VIEW': 'views',
     'TRIGGER': 'triggers',
     'SQL_TRIGGER': 'triggers',
+    'TABLE': 'tables',
+    'USER_TABLE': 'tables',
   };
   return typeMap[objectType.toUpperCase()] || 'other';
 }
@@ -48,7 +50,7 @@ function getObjectTypeDir(objectType: string): string {
  */
 export function ensureBackupDirs(): void {
   const backupDir = getBackupDir();
-  const subdirs = ['procedures', 'functions', 'views', 'triggers', 'other'];
+  const subdirs = ['procedures', 'functions', 'views', 'triggers', 'tables', 'other'];
 
   if (!existsSync(backupDir)) {
     mkdirSync(backupDir, { recursive: true });
@@ -370,7 +372,7 @@ export function extractDefinitionFromBackup(content: string): string {
   }
 
   // Fallback: try to find CREATE or ALTER statement
-  const createMatch = content.match(/(CREATE|ALTER)\s+(PROCEDURE|FUNCTION|VIEW|TRIGGER)/i);
+  const createMatch = content.match(/(CREATE|ALTER)\s+(PROCEDURE|FUNCTION|VIEW|TRIGGER|TABLE)/i);
   if (createMatch && createMatch.index !== undefined) {
     return content.substring(createMatch.index);
   }
