@@ -100,30 +100,37 @@ export class SqlServerAdapter implements DbAdapter {
 
     try {
       const request = this.pool.request();
-      
+
       // Add parameters to the request
       params.forEach((param, index) => {
         request.input(`param${index}`, param);
       });
-      
+
       // Replace ? with named parameters
       const preparedQuery = query.replace(/\?/g, (_, i) => `@param${i}`);
-      
-      // Add output parameter for identity value if it's an INSERT
+
+      // Execute query and capture result
       let lastID = 0;
+      let result;
+
       if (query.trim().toUpperCase().startsWith('INSERT')) {
+        // For INSERT, also get SCOPE_IDENTITY
         request.output('insertedId', sql.Int, 0);
         const updatedQuery = `${preparedQuery}; SELECT @insertedId = SCOPE_IDENTITY();`;
-        const result = await request.query(updatedQuery);
+        result = await request.query(updatedQuery);
         lastID = result.output.insertedId || 0;
       } else {
-        const result = await request.query(preparedQuery);
-        lastID = 0;
+        result = await request.query(preparedQuery);
       }
-      
-      return { 
-        changes: this.getAffectedRows(query, lastID), 
-        lastID: lastID 
+
+      // Get affected rows from result (the driver provides this)
+      const affectedRows = Array.isArray(result.rowsAffected)
+        ? (result.rowsAffected[0] ?? 0)
+        : 0;
+
+      return {
+        changes: affectedRows,
+        lastID: lastID
       };
     } catch (err) {
       throw new Error(`SQL Server query error: ${(err as Error).message}`);
@@ -202,14 +209,4 @@ export class SqlServerAdapter implements DbAdapter {
     `;
   }
 
-  /**
-   * Helper to get the number of affected rows based on query type
-   */
-  private getAffectedRows(query: string, lastID: number): number {
-    const queryType = query.trim().split(' ')[0].toUpperCase();
-    if (queryType === 'INSERT' && lastID > 0) {
-      return 1;
-    }
-    return 0; // For SELECT, unknown for UPDATE/DELETE without additional query
-  }
 } 
