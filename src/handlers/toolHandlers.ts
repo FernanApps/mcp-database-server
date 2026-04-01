@@ -28,6 +28,7 @@ import {
   cleanupBackups,
 } from '../tools/backupTools.js';
 import { getTableStructure, truncateTable } from '../tools/tableTools.js';
+import { listTypes, getTypeDefinition, createType, dropType, alterType } from '../tools/typeTools.js';
 
 /**
  * Handle listing available tools
@@ -481,6 +482,73 @@ export function handleListTools() {
           required: ["confirm"],
         },
       },
+
+      // ========================================
+      // SQL SERVER TOOLS - USER-DEFINED TYPES
+      // ========================================
+      {
+        name: "list_types",
+        description: "[SQL Server] List all user-defined types (TABLE types, alias types) with optional filtering",
+        inputSchema: {
+          type: "object",
+          properties: {
+            schema: { type: "string", description: "Schema name to filter (default: all schemas)" },
+            filter: { type: "string", description: "Filter pattern for type names (LIKE pattern, e.g. '%Address%')" },
+          },
+        },
+      },
+      {
+        name: "get_type_definition",
+        description: "[SQL Server] Get the complete definition/structure of a user-defined type including columns for TABLE types",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type_name: { type: "string", description: "Name of the user-defined type" },
+            schema_name: { type: "string", description: "Schema name (defaults to 'dbo')" },
+          },
+          required: ["type_name"],
+        },
+      },
+      {
+        name: "create_type",
+        description: "[SQL Server] Create a new user-defined type (TABLE type or alias type)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type_name: { type: "string", description: "Name of the new type (can include schema: 'dbo.MyType')" },
+            definition: { type: "string", description: "Complete CREATE TYPE statement" },
+            confirm: { type: "boolean", description: "REQUIRED: Set to true to confirm this operation" },
+          },
+          required: ["type_name", "definition", "confirm"],
+        },
+      },
+      {
+        name: "drop_type",
+        description: "[SQL Server] Drop a user-defined type (creates mandatory backup before deletion). Checks for dependencies first.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type_name: { type: "string", description: "Name of the type to drop" },
+            schema_name: { type: "string", description: "Schema name (defaults to 'dbo')" },
+            confirm: { type: "boolean", description: "REQUIRED: Set to true to confirm this operation" },
+          },
+          required: ["type_name", "confirm"],
+        },
+      },
+      {
+        name: "alter_type",
+        description: "[SQL Server] Modify a user-defined type (drops and recreates with backup). Checks for dependencies first.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            type_name: { type: "string", description: "Name of the type to modify" },
+            new_definition: { type: "string", description: "Complete new CREATE TYPE statement" },
+            schema_name: { type: "string", description: "Schema name (defaults to 'dbo')" },
+            confirm: { type: "boolean", description: "REQUIRED: Set to true to confirm this operation" },
+          },
+          required: ["type_name", "new_definition", "confirm"],
+        },
+      },
     ],
   };
 }
@@ -617,6 +685,24 @@ export async function handleToolCall(name: string, args: any) {
 
       case "cleanup_backups":
         return await cleanupBackups(args.days, args.confirm);
+
+      // ========================================
+      // SQL SERVER TOOLS - USER-DEFINED TYPES
+      // ========================================
+      case "list_types":
+        return await listTypes(args.schema, args.filter);
+
+      case "get_type_definition":
+        return await getTypeDefinition(args.type_name, args.schema_name || 'dbo');
+
+      case "create_type":
+        return await createType(args.type_name, args.definition, args.confirm);
+
+      case "drop_type":
+        return await dropType(args.type_name, args.schema_name || 'dbo', args.confirm);
+
+      case "alter_type":
+        return await alterType(args.type_name, args.new_definition, args.schema_name || 'dbo', args.confirm);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

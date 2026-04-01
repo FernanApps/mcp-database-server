@@ -41,6 +41,9 @@ function getObjectTypeDir(objectType: string): string {
     'SQL_TRIGGER': 'triggers',
     'TABLE': 'tables',
     'USER_TABLE': 'tables',
+    'TYPE': 'types',
+    'TABLE_TYPE': 'types',
+    'ALIAS_TYPE': 'types',
   };
   return typeMap[objectType.toUpperCase()] || 'other';
 }
